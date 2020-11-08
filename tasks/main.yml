@@ -1,0 +1,74 @@
+---
+# tasks file for rbenv_user
+- name: rbenv_user Include distribution env vars
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: rbenv_user Shell variable parse at rbenv_user_install_path
+  become_user: "{{ rbevn_user_name }}"
+  shell: "echo {{ rbenv_user_install_path }}"
+  register: ret
+
+- name: rbenv_user set rbenv_user_install_path
+  set_fact:
+    rbenv_user_install_path: "{{ ret.stdout }}"
+
+- name: rbenv_user_install_path
+  debug:
+    var: rbenv_user_install_path
+
+- name: rbevn_user clean up directory {{ rbenv_user_install_path }}
+  become_user: "{{ rbevn_user_name }}"
+  file:
+    path: "{{ rbenv_user_install_path }}"
+    state: absent
+  when:  rbenv_user_clean_up
+
+- name: rbenv_user Clone git repository
+  become_user: "{{ rbevn_user_name }}"
+  git:
+    repo: https://github.com/rbenv/rbenv.git
+    dest: "{{ rbenv_user_install_path }}"
+    version: "{{ rbenv_user_rbenv_version }}"
+    clone: yes
+
+- name: rbenv_user update git repository
+  become_user: "{{ rbevn_user_name }}"
+  git:
+    repo: https://github.com/rbenv/rbenv.git
+    dest: "{{ rbenv_user_install_path }}"
+    update: "{{ rbenv_user_version_up }}"
+  when: rbenv_user_version_up
+
+- name: rbenv_user Install Plugin
+  become_user: "{{ rbevn_user_name }}"
+  git:
+    repo: "{{ item.repo }}"
+    dest: "{{ rbenv_user_install_path }}/plugins/{{ item.suffix_dest }}"
+    version: "{{ item.version }}"
+    clone: yes
+  when: no
+  loop:
+    - repo: "https://github.com/rbenv/ruby-build.git"
+      suffix_dest: "ruby-build"
+      version: "v20201005"
+    - repo: "https://github.com/rbenv/rbenv-default-gems.git"
+      suffix_dest: "rbenv-default-gems"
+      version: "v1.0.0"
+
+- name: rbenv_user Copy rbenv config files
+  become_user: "{{ rbevn_user_name }}"
+  copy:
+    src: "{{ item }}"
+    dest: "{{ rbenv_user_install_path }}"
+  loop: "{{ rbenv_user_copy_conf_files }}"
+
+- name: rbenv_user Install build packages
+  become: yes
+  package:
+    name: "{{ rbenv_user_need_dist_package }}"
+    state: present
+
+- name: "rbenv_user Build ruby v{{ item }}"
+  become_user: "{{ rbevn_user_name }}"
+  shell: "{{ rbenv_user_install_path }}/bin/rbenv install --skip-existing {{ item }}"
+  loop: "{{ rbenv_user_ruby_versions }}"

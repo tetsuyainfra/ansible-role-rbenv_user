@@ -1,0 +1,4 @@
+---
+# defaults file for rbenv_user
+rbenv_user_copy_conf_files:
+  - "rbenv_user/default-gems"

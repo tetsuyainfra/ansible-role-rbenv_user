@@ -1,0 +1,18 @@
+rbenv_user_need_dist_package:
+- build-essential
+- autoconf
+- bison
+- libssl-dev
+- libyaml-dev
+- libreadline6-dev
+- zlib1g-dev
+- libncurses5-dev
+- libffi-dev
+- libgdbm6
+- libgdbm-dev
+- libdb-dev
+- curl
+- libcurl4-openssl-dev
+- libxml2-dev
+- libxslt1-dev
+
